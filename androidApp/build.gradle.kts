@@ -178,11 +178,7 @@ dependencies {
     implementation(projects.composeApp)
     implementation(projects.data)
 
-    if (isFullBuild) {
-        implementation(projects.crashlytics)
-    } else {
-        implementation(projects.crashlyticsEmpty)
-    }
+    implementation(projects.crashlyticsEmpty)
 }
 
 sentry {

@@ -36,7 +36,6 @@ import org.koin.core.context.loadKoinModules
 import org.koin.core.context.startKoin
 import org.koin.core.logger.Level
 import org.simpmusic.crashlytics.configCrashlytics
-import org.simpmusic.lastfm.configLastfm
 import java.lang.reflect.Field
 
 class SimpMusicApplication :
@@ -51,7 +50,6 @@ class SimpMusicApplication :
     override fun onCreate() {
         super.onCreate()
         configCrashlytics(this, BuildKonfig.sentryDsn)
-        configLastfm(BuildKonfig.lastfmApiKey, BuildKonfig.lastfmSecret)
         startKoin {
             androidLogger(level = Level.DEBUG)
             androidContext(this@SimpMusicApplication)
