@@ -1,4 +1,4 @@
-# SimpMusic Contributor Covenant Code of Conduct
+# RetroPod Contributor Covenant Code of Conduct
 
 ## Our Pledge
 

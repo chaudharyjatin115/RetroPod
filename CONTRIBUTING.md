@@ -1,4 +1,4 @@
-# Contributing to SimpMusic
+# Contributing to RetroPod
 
 Thanks for wanting to help! The short version:
 

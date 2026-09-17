@@ -1,4 +1,4 @@
-# CLAUDE.md - SimpMusic Project Guide for AI Agents
+# CLAUDE.md - RetroPod Project Guide for AI Agents
 
 ## 🌐 Language Rule
 
@@ -6,15 +6,16 @@
 
 ## 📋 Project Overview
 
-**SimpMusic** is a FOSS (Free and Open Source Software) YouTube Music client for Android and Desktop, built with Compose Multiplatform.
+**RetroPod** is a modern Android music application built with Kotlin Multiplatform and Jetpack Compose that brings the nostalgia of classic click-wheel iPods into a sleek, feature-packed digital music player.
 
 ### Main Purpose
-- Stream music from YouTube Music and YouTube for free, ad-free, with background playback
-- Provide advanced features like Spotify Canvas, AI song suggestions, synced lyrics
-- Support both Android and Desktop (Windows, macOS, Linux)
+- Stream music from YouTube Music or play local device audio with an authentic retro iPod click-wheel UI
+- Provide rich features like custom iPod hardware shell themes, expressive LCD display themes, haptic wheel scrolling, and offline downloads
+- Android native player leveraging AndroidX Media3 (ExoPlayer)
 
 ### Basic Information
-- **Package name**: `com.maxrave.simpmusic`
+- **App Name**: RetroPod
+- **Application ID**: `com.maxrave.retropod`
 - **Primary language**: Kotlin
 - **UI Framework**: Jetpack Compose / Compose Multiplatform
 - **Architecture**: Clean Architecture + MVVM
