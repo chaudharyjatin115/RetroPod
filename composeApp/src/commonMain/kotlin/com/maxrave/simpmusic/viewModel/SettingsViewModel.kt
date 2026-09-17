@@ -45,7 +45,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.koin.core.component.inject
-import org.simpmusic.lastfm.isLastfmAvailable
 import org.jetbrains.compose.resources.getString as formatString
 import simpmusic.composeapp.generated.resources.Res
 import simpmusic.composeapp.generated.resources.backup_create_failed
@@ -75,7 +74,7 @@ class SettingsViewModel(
     private val accountRepository: AccountRepository,
     private val cacheRepository: CacheRepository,
     private val artistRepository: ArtistRepository,
-    private val lyricsRomanizerRepository: LyricsRomanizerRepository,
+    private val lyricsRomanizerRepository: LyricsRomanizerRepository? = null,
 ) : BaseViewModel() {
     private val databasePath: String? = commonRepository.getDatabasePath()
     private val downloadUtils: DownloadHandler by inject()
@@ -84,7 +83,7 @@ class SettingsViewModel(
 
     /** READY everywhere the dictionary is bundled (Desktop), so only Android ever leaves it. */
     val japaneseDictionaryState: StateFlow<RomanizationDictionaryState> =
-        lyricsRomanizerRepository.japaneseDictionaryState
+        lyricsRomanizerRepository?.japaneseDictionaryState ?: MutableStateFlow(RomanizationDictionaryState.READY)
 
     private var _location: MutableStateFlow<String?> = MutableStateFlow(null)
     val location: StateFlow<String?> = _location
@@ -199,7 +198,7 @@ class SettingsViewModel(
      * Last.fm block in settings is hidden when it is false, rather than offering a login that
      * could never succeed.
      */
-    val lastfmAvailable: Boolean = isLastfmAvailable()
+    val lastfmAvailable: Boolean = false
 
     private val _lastfmUsername = MutableStateFlow("")
     val lastfmUsername: StateFlow<String> = _lastfmUsername
@@ -1104,7 +1103,7 @@ class SettingsViewModel(
         val state = japaneseDictionaryState.value
         if (state == RomanizationDictionaryState.READY || state == RomanizationDictionaryState.DOWNLOADING) return
         viewModelScope.launch {
-            lyricsRomanizerRepository.downloadJapaneseDictionary()
+            lyricsRomanizerRepository?.downloadJapaneseDictionary()
             // The repository settles the state before returning, so reading it back here is the
             // completion signal — no separate callback needed for the two toasts.
             when (japaneseDictionaryState.value) {
@@ -1543,10 +1542,8 @@ class SettingsViewModel(
         val currentPageId = dataStoreManager.pageId.first()
         val currentLoggedIn = dataStoreManager.loggedIn.first() == DataStoreManager.TRUE
         try {
-            runBlocking {
-                dataStoreManager.setCookie(cookie, "")
-                dataStoreManager.setLoggedIn(true)
-            }
+            dataStoreManager.setCookie(cookie, "")
+            dataStoreManager.setLoggedIn(true)
             return accountRepository
                 .getAccountInfo(
                     cookie,
@@ -1608,19 +1605,15 @@ class SettingsViewModel(
                     true
                 } ?: run {
                 Logger.w("getAllGoogleAccount", "addAccount: Account info is null")
-                runBlocking {
-                    dataStoreManager.setCookie(currentCookie, currentPageId)
-                    dataStoreManager.setLoggedIn(currentLoggedIn)
-                }
+                dataStoreManager.setCookie(currentCookie, currentPageId)
+                dataStoreManager.setLoggedIn(currentLoggedIn)
                 false
             }
         } catch (e: Exception) {
             e.printStackTrace()
             Logger.e("getAllGoogleAccount", "addAccount: ${e.message}")
-            runBlocking {
-                dataStoreManager.setCookie(currentCookie, currentPageId)
-                dataStoreManager.setLoggedIn(currentLoggedIn)
-            }
+            dataStoreManager.setCookie(currentCookie, currentPageId)
+            dataStoreManager.setLoggedIn(currentLoggedIn)
             return false
         }
     }

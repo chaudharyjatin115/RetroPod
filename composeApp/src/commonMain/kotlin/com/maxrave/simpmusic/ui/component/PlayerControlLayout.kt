@@ -33,7 +33,7 @@ import com.maxrave.simpmusic.ui.icon.SimpIcons
 import com.maxrave.simpmusic.ui.icon.SkipNext
 import com.maxrave.simpmusic.ui.icon.SkipPrevious
 import com.maxrave.simpmusic.ui.theme.seed
-import com.maxrave.simpmusic.viewModel.UIEvent
+import com.maxrave.simpmusic.viewModel.SharedViewModel.UIEvent
 
 @Composable
 fun PlayerControlLayout(

@@ -10,8 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import org.simpmusic.lastfm.authorizeUrl
-import org.simpmusic.lastfm.completeLogin
 
 class LogInViewModel(
     private val dataStoreManager: DataStoreManager,
@@ -91,33 +89,8 @@ class LogInViewModel(
      * Nothing is fetched first: in the web flow Last.fm mints the token itself and hands it back on
      * the callback, so the app has no token to hold on to until the user returns.
      */
-    fun startLastfmLogin() {
-        val url = authorizeUrl()
-        _lastfmState.value =
-            if (url != null) {
-                LastfmLoginState.AwaitingApproval(authorizeUrl = url)
-            } else {
-                LastfmLoginState.Failed
-            }
-    }
-
-    /** Exchanges the token that arrived on the callback for a session key. */
-    fun completeLastfmLogin(token: String) {
-        viewModelScope.launch {
-            if (token.isEmpty()) return@launch
-            _lastfmState.value = LastfmLoginState.CompletingLogin
-            val session = completeLogin(token)
-            if (session != null) {
-                dataStoreManager.setLastfmSession(
-                    sessionKey = session.sessionKey,
-                    username = session.username,
-                )
-                _lastfmState.value = LastfmLoginState.LoggedIn(session.username)
-            } else {
-                _lastfmState.value = LastfmLoginState.Failed
-            }
-        }
-    }
+    fun startLastfmLogin() {}
+    fun completeLastfmLogin(token: String) {}
 
     /**
      * Finishes the login from whatever the user pasted back.

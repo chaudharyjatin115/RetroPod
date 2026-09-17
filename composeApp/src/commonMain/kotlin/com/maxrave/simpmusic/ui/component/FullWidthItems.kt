@@ -66,7 +66,6 @@ import com.maxrave.domain.data.entities.ArtistEntity
 import com.maxrave.domain.data.entities.DownloadState
 import com.maxrave.domain.data.entities.LocalPlaylistEntity
 import com.maxrave.domain.data.entities.PlaylistEntity
-import com.maxrave.domain.data.entities.PodcastsEntity
 import com.maxrave.domain.data.entities.SongEntity
 import com.maxrave.domain.data.model.browse.album.Track
 import com.maxrave.domain.data.model.searchResult.albums.AlbumsResult
@@ -569,13 +568,6 @@ fun PlaylistFullWidthItems(
                 thumb = data.thumbnails.lastOrNull()?.url ?: ""
                 secondSubtitle = data.artists.toListName().connectArtists()
                 thirdRowSubtitle = data.year
-            }
-
-            is PodcastsEntity -> {
-                title = data.title
-                thumb = data.thumbnail ?: ""
-                secondSubtitle = data.authorName
-                thirdRowSubtitle = data.description
             }
         }
         Row(

@@ -4,8 +4,6 @@ pluginManagement {
         mavenCentral()
         gradlePluginPortal()
         maven { setUrl("https://jitpack.io") }
-        // oss.sonatype.org (legacy OSSRH) removed — Sonatype shut it down; its flaky
-        // 504s disabled the whole repo set and blocked resolution fallbacks.
         maven("https://jogamp.org/deployment/maven")
     }
 }
@@ -25,16 +23,11 @@ plugins {
     id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
 }
 
-// Core modules live in the `core` git submodule INSIDE this repo.
-// We intentionally resolve ONLY the in-repo submodule and no longer probe a
-// sibling `../core` outside SimpMusic: another project (FPT Play `core`) shares
-// the same folder name one level up, and the old co-development lookup bound to
-// it by mistake, breaking configuration with ":common ... does not exist".
 val coreDir = File(rootDir, "core")
 val serviceDir = File(rootDir, "core/service")
 val mediaDir = File(rootDir, "core/media")
 
-rootProject.name = "SimpMusic"
+rootProject.name = "RetroPod"
 include(
     ":androidApp",
     ":composeApp",
@@ -43,11 +36,8 @@ include(
     ":domain",
     ":ktorExt",
     ":kotlinYtmusicScraper",
-    ":lyricsService",
     ":media3",
     ":media3-ui",
-    ":crashlytics-empty",
-    ":cast-empty",
 )
 
 // core modules
@@ -57,7 +47,6 @@ project(":domain").projectDir = File(coreDir, "domain")
 
 // service modules
 project(":ktorExt").projectDir = File(serviceDir, "ktorExt")
-project(":lyricsService").projectDir = File(serviceDir, "lyricsService")
 project(":kotlinYtmusicScraper").projectDir = File(serviceDir, "kotlinYtmusicScraper")
 
 // media modules

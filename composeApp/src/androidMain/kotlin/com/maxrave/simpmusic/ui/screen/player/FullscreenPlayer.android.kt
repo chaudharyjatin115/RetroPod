@@ -17,7 +17,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import com.maxrave.simpmusic.extension.findActivity
 
 @Composable
-actual fun FullScreenRotationImmersive(
+fun FullScreenRotationImmersive(
     onLaunch: () -> Unit,
     onDispose: () -> Unit,
 ) {

@@ -7,21 +7,28 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 
 sealed class IpodScreen(val title: String) {
-    data object Main : IpodScreen("iPod")
+    data object Main : IpodScreen("RetroPod")
     data object Music : IpodScreen("Music")
     data object Playlists : IpodScreen("Playlists")
     data object Artists : IpodScreen("Artists")
     data object Albums : IpodScreen("Albums")
     data object Songs : IpodScreen("Songs")
     data object LocalSongs : IpodScreen("Local Storage")
+    data object LikedSongs : IpodScreen("Liked Songs")
+    data object LocalPlaylists : IpodScreen("Local Playlists")
+    data class LocalPlaylistDetail(val playlistName: String, val playlistId: Long) : IpodScreen(playlistName)
     data class ArtistDetail(val artistName: String, val artistId: String) : IpodScreen(artistName)
     data class AlbumDetail(val albumName: String, val albumId: String) : IpodScreen(albumName)
     data class PlaylistDetail(val playlistName: String, val playlistId: String) : IpodScreen(playlistName)
     data object NowPlaying : IpodScreen("Now Playing")
     data object Search : IpodScreen("Search")
     data object Settings : IpodScreen("Settings")
-    data object SettingsFinish : IpodScreen("iPod Finish")
-    data object SettingsLcdTheme : IpodScreen("LCD Theme")
+    data object SettingsHardwarePreset : IpodScreen("Shell Theme")
+    data object SettingsFinishStyle : IpodScreen("Hardware Finish")
+    data object SettingsLcdTheme : IpodScreen("LCD Display Theme")
+    data object SettingsLogin : IpodScreen("YouTube Account")
+    data object YouTubeLogin : IpodScreen("Sign In")
+    data class TrackOptions(val track: com.maxrave.domain.data.model.browse.album.Track, val queue: List<com.maxrave.domain.data.model.browse.album.Track>) : IpodScreen(track.title)
 }
 
 data class IpodMenuItem(

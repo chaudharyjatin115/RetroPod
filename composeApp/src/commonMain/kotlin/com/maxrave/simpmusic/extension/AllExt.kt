@@ -168,19 +168,14 @@ fun ArtistBrowse.toArtistScreenData(): ArtistScreenData =
         playCount = this.views,
         isChannel = this.songs == null,
         channelId = this.channelId,
-        radioParam = this.radioId,
-        shuffleParam = this.shuffleId,
+        radioParam = null,
+        shuffleParam = null,
         description = this.description,
         listSongParam = this.songs?.browseId,
         popularSongs = this.songs?.results?.map { it.toTrack() } ?: emptyList(),
-        singles = this.singles,
-        albums = this.albums,
-        video =
-            this.video?.let { video ->
-                ArtistBrowse.Videos(video.map { it.toTrack() }, this.videoList)
-            },
-        related = this.related,
-        featuredOn = this.featuredOn ?: emptyList(),
+        singles = listOfNotNull(this.singles),
+        albums = listOfNotNull(this.albums),
+        video = null,
     )
 
 /**

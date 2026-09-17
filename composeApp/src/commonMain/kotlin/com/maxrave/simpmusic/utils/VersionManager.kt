@@ -1,22 +1,15 @@
 package com.maxrave.simpmusic.utils
 
-import com.maxrave.simpmusic.BuildKonfig
-
 object VersionManager {
-    private var versionName: String? = null
+    private var versionName: String? = "1.0.0"
 
     fun initialize() {
         if (versionName == null) {
-            versionName =
-                try {
-                    BuildKonfig.versionName
-                } catch (_: Exception) {
-                    String()
-                }
+            versionName = "1.0.0"
         }
     }
 
-    fun getVersionName(): String = removeDevSuffix(versionName ?: String())
+    fun getVersionName(): String = removeDevSuffix(versionName ?: "1.0.0")
 
     private fun removeDevSuffix(versionName: String): String {
         return if (versionName.endsWith("-dev")) {

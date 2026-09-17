@@ -15,17 +15,13 @@ import com.maxrave.domain.data.type.RecentlyType
 import com.maxrave.domain.extension.now
 import com.maxrave.domain.manager.DataStoreManager
 import com.maxrave.domain.repository.AlbumRepository
-import com.maxrave.domain.repository.AnalyticsRepository
 import com.maxrave.domain.repository.CommonRepository
 import com.maxrave.domain.repository.LocalPlaylistRepository
 import com.maxrave.domain.repository.PlaylistRepository
-import com.maxrave.domain.repository.PodcastRepository
 import com.maxrave.domain.repository.SongRepository
 import com.maxrave.domain.utils.LocalResource
 import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.isRadioPlaylistId
-import com.maxrave.simpmusic.ui.screen.home.analytics.monthFullNameResource
-import com.maxrave.simpmusic.ui.screen.library.LibraryDynamicPlaylistType
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -57,13 +53,11 @@ import simpmusic.composeapp.generated.resources.youtube_liked_music
 
 class LibraryViewModel(
     private val dataStoreManager: DataStoreManager,
-    private val analyticsRepository: AnalyticsRepository,
     private val songRepository: SongRepository,
     private val commonRepository: CommonRepository,
     private val playlistRepository: PlaylistRepository,
     private val localPlaylistRepository: LocalPlaylistRepository,
     private val albumRepository: AlbumRepository,
-    private val podcastRepository: PodcastRepository,
 ) : BaseViewModel() {
     private val _currentScreen: MutableStateFlow<LibraryChipType> = MutableStateFlow(LibraryChipType.YOUR_LIBRARY)
     val currentScreen: StateFlow<LibraryChipType> get() = _currentScreen.asStateFlow()
@@ -250,12 +244,7 @@ class LibraryViewModel(
     }
 
     fun getFavoritePodcasts() {
-        viewModelScope.launch {
-            podcastRepository.getFavoritePodcasts().collectLatest { podcasts ->
-                val sortedList = podcasts.sortedByDescending { it.favoriteTime }
-                _favoritePodcasts.value = LocalResource.Success(sortedList)
-            }
-        }
+        _favoritePodcasts.value = LocalResource.Success(emptyList())
     }
 
     fun getCanvasSong() {
@@ -301,57 +290,7 @@ class LibraryViewModel(
      * ranking query followed by a song lookup.
      */
     fun getMonthlyRecaps() {
-        _monthlyRecaps.value = LocalResource.Loading()
-        viewModelScope.launch {
-            val today = now().date
-            val thisMonth = LocalDate(today.year, today.month, 1)
-            val months =
-                (0 until MONTHS_OF_RECAP)
-                    .map { thisMonth.minus(it, DateTimeUnit.MONTH) }
-                    .mapNotNull { firstDay ->
-                        val lastDay = firstDay.plus(1, DateTimeUnit.MONTH).minus(1, DateTimeUnit.DAY)
-                        val start = firstDay.atTime(0, 0)
-                        val end = lastDay.atTime(23, 59, 59)
-                        val plays =
-                            analyticsRepository
-                                .getPlaybackEventCountInRange(
-                                    startTimestamp = start,
-                                    endTimestamp = end,
-                                ).firstOrNull() ?: 0L
-                        if (plays <= 0L) return@mapNotNull null
-                        MonthlyRecapItem(
-                            year = firstDay.year,
-                            month = firstDay.month.number,
-                            title = recapTitle(firstDay.year, firstDay.month, today.year),
-                        )
-                    }
-            _monthlyRecaps.value = LocalResource.Success(months)
-        }
-    }
-
-    /**
-     * "Recap January", or "Recap January 2025" once the year stops being obvious.
-     *
-     * The same rule and the same two format strings as the header the tile opens — see
-     * [LibraryDynamicPlaylistType.title]. Fully qualified because [BaseViewModel] has a `getString`
-     * of its own that takes no format argument and wraps `runBlocking`, which has no business
-     * running inside a coroutine that is already suspended here.
-     */
-    private suspend fun recapTitle(
-        year: Int,
-        month: Month,
-        currentYear: Int,
-    ): String {
-        val monthName =
-            org.jetbrains.compose.resources
-                .getString(monthFullNameResource(month))
-        return if (year == currentYear) {
-            org.jetbrains.compose.resources
-                .getString(Res.string.wrapped_recap_month, monthName)
-        } else {
-            org.jetbrains.compose.resources
-                .getString(Res.string.wrapped_recap_month_year, monthName, year.toString())
-        }
+        _monthlyRecaps.value = LocalResource.Success(emptyList())
     }
 
     fun getChartPlaylists() {

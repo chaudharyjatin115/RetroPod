@@ -47,6 +47,14 @@ actual fun PlatformWebView(
                             ViewGroup.LayoutParams.MATCH_PARENT,
                             ViewGroup.LayoutParams.MATCH_PARENT,
                         )
+                    val cookieManager = CookieManager.getInstance()
+                    cookieManager.setAcceptCookie(true)
+                    cookieManager.setAcceptThirdPartyCookies(this, true)
+
+                    settings.javaScriptEnabled = true
+                    settings.domStorageEnabled = true
+                    settings.userAgentString = SAMSUNG_USER_AGENT
+
                     webViewClient =
                         object : WebViewClient() {
                             override fun onPageFinished(
@@ -58,8 +66,6 @@ actual fun PlatformWebView(
                                 }
                             }
                         }
-                    settings.javaScriptEnabled = true
-                    settings.domStorageEnabled = true
 
                     loadUrl(initUrl)
                 }

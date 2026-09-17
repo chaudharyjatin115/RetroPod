@@ -3,13 +3,6 @@
 import org.jetbrains.kotlin.gradle.ExperimentalKotlinGradlePluginApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
-val isFullBuild: Boolean =
-    try {
-        extra["isFullBuild"] == "true"
-    } catch (e: Exception) {
-        false
-    }
-
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.compose.multiplatform)
@@ -21,6 +14,7 @@ plugins {
 }
 
 compose.resources {
+    packageOfResClass = "simpmusic.composeapp.generated.resources"
     generateResClass = always
 }
 
@@ -67,9 +61,6 @@ kotlin {
 
             api(projects.media3)
             api(projects.media3Ui)
-
-            // Keep the Cast API available to the unchanged UI without shipping Google Cast.
-            implementation(projects.castEmpty)
         }
         commonMain.dependencies {
             implementation(libs.runtime)
@@ -130,10 +121,6 @@ kotlin {
 
             api(libs.cmptoast)
             implementation(libs.file.picker)
-
-            // Liquid glass
-            implementation(libs.liquid.glass)
-            implementation(libs.liquid.glass.shape)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

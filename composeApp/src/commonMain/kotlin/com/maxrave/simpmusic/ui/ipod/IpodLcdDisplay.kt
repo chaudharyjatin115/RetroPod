@@ -1,9 +1,10 @@
 package com.maxrave.simpmusic.ui.ipod
 
-import androidx.compose.animation.AnimatedVisibility
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,14 +22,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
-import androidx.compose.material.icons.rounded.BatteryFull
-import androidx.compose.material.icons.rounded.MusicNote
-import androidx.compose.material.icons.rounded.Pause
-import androidx.compose.material.icons.rounded.PlayArrow
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -37,6 +30,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,12 +43,23 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil3.compose.AsyncImage
-import com.maxrave.domain.data.model.SongModel
+import com.maxrave.simpmusic.expect.ui.createWebViewCookieManager
+import com.maxrave.domain.data.model.browse.album.Track
+import com.maxrave.simpmusic.expect.ui.PlatformWebView
+import com.maxrave.simpmusic.expect.ui.rememberWebViewState
+import com.maxrave.simpmusic.ui.icon.ArrowBackIosNew
+import com.maxrave.simpmusic.ui.icon.ArrowForwardIos
+import com.maxrave.simpmusic.ui.icon.LibraryMusic
+import com.maxrave.simpmusic.ui.icon.Pause
+import com.maxrave.simpmusic.ui.icon.PlayArrow
+import com.maxrave.simpmusic.ui.icon.Search
+import com.maxrave.simpmusic.ui.icon.SimpIcons
 
 @Composable
 fun IpodLcdDisplay(
@@ -59,13 +68,14 @@ fun IpodLcdDisplay(
     canGoBack: Boolean,
     items: List<IpodMenuItem>,
     selectedIndex: Int,
-    currentSong: SongModel?,
+    currentSong: Track?,
     isPlaying: Boolean,
     currentPositionMs: Long,
     durationMs: Long,
     lyricsText: String?,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
+    onYoutubeLoginDone: (cookie: String) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -92,7 +102,6 @@ fun IpodLcdDisplay(
                         LcdNowPlayingView(
                             lcdTheme = lcdTheme,
                             song = currentSong,
-                            isPlaying = isPlaying,
                             currentPositionMs = currentPositionMs,
                             durationMs = durationMs,
                             lyricsText = lyricsText
@@ -105,6 +114,11 @@ fun IpodLcdDisplay(
                             onSearchQueryChange = onSearchQueryChange,
                             items = items,
                             selectedIndex = selectedIndex
+                        )
+                    }
+                    is IpodScreen.YouTubeLogin -> {
+                        LcdLoginView(
+                            onLoginDone = onYoutubeLoginDone
                         )
                     }
                     else -> {
@@ -152,7 +166,7 @@ private fun LcdHeaderBar(
             // Left: Back Indicator
             if (canGoBack) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                    imageVector = SimpIcons.ArrowBackIosNew,
                     contentDescription = "Back",
                     tint = lcdTheme.headerTextColor,
                     modifier = Modifier.size(14.dp)
@@ -175,18 +189,38 @@ private fun LcdHeaderBar(
             // Right: Play / Battery Status Icons
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = if (isPlaying) Icons.Rounded.PlayArrow else Icons.Rounded.Pause,
+                    imageVector = if (isPlaying) SimpIcons.PlayArrow else SimpIcons.Pause,
                     contentDescription = "Status",
                     tint = lcdTheme.headerTextColor,
-                    modifier = Modifier.size(14.dp)
+                    modifier = Modifier.size(13.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Icon(
-                    imageVector = Icons.Rounded.BatteryFull,
-                    contentDescription = "Battery",
-                    tint = lcdTheme.headerTextColor,
-                    modifier = Modifier.size(16.dp)
-                )
+                Spacer(modifier = Modifier.width(6.dp))
+                // Battery Icon Graphic
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .width(18.dp)
+                            .height(10.dp)
+                            .border(1.dp, lcdTheme.headerTextColor, RoundedCornerShape(2.dp))
+                            .padding(1.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxHeight()
+                                .fillMaxWidth(0.85f)
+                                .background(lcdTheme.headerTextColor)
+                        )
+                    }
+                    // Battery nub
+                    Box(
+                        modifier = Modifier
+                            .width(1.5.dp)
+                            .height(4.dp)
+                            .background(lcdTheme.headerTextColor, RoundedCornerShape(
+                                topEnd = 1.dp, bottomEnd = 1.dp
+                            ))
+                    )
+                }
             }
         }
 
@@ -204,7 +238,7 @@ private fun LcdMenuView(
     items: List<IpodMenuItem>,
     selectedIndex: Int,
     isMainMenu: Boolean,
-    currentSong: SongModel?
+    currentSong: Track?
 ) {
     val listState = rememberLazyListState()
 
@@ -245,7 +279,9 @@ private fun LcdMenuView(
                 }
 
                 Row(
-                    modifier = rowModifier.padding(horizontal = 8.dp),
+                    modifier = rowModifier
+                        .clickable { item.action() }
+                        .padding(horizontal = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
@@ -271,10 +307,10 @@ private fun LcdMenuView(
 
                     if (item.hasSubmenu) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
+                            imageVector = SimpIcons.ArrowForwardIos,
                             contentDescription = "Submenu",
                             tint = if (isSelected) lcdTheme.highlightTextColor else lcdTheme.secondaryTextColor,
-                            modifier = Modifier.size(14.dp)
+                            modifier = Modifier.size(12.dp)
                         )
                     }
                 }
@@ -307,7 +343,7 @@ private fun LcdMenuView(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Rounded.MusicNote,
+                        imageVector = SimpIcons.LibraryMusic,
                         contentDescription = "Music",
                         tint = lcdTheme.secondaryTextColor.copy(alpha = 0.5f),
                         modifier = Modifier.size(48.dp)
@@ -321,25 +357,43 @@ private fun LcdMenuView(
 @Composable
 private fun LcdNowPlayingView(
     lcdTheme: LcdTheme,
-    song: SongModel?,
-    isPlaying: Boolean,
+    song: Track?,
     currentPositionMs: Long,
     durationMs: Long,
     lyricsText: String?
 ) {
     if (song == null) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = SimpIcons.LibraryMusic,
+                contentDescription = null,
+                tint = lcdTheme.secondaryTextColor,
+                modifier = Modifier.size(36.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "No Song Playing",
-                color = lcdTheme.secondaryTextColor,
+                color = lcdTheme.textColor,
                 fontSize = 13.sp,
-                fontWeight = FontWeight.Medium
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Select a song from Search or Music to start playback",
+                color = lcdTheme.secondaryTextColor,
+                fontSize = 10.sp,
+                textAlign = TextAlign.Center
             )
         }
         return
     }
 
-    val thumbnailUrl = song.thumbnails?.lastOrNull()?.url
+    val rawThumb = song.thumbnails?.lastOrNull()?.url
+    val thumbnailUrl = if (!rawThumb.isNullOrEmpty()) rawThumb else if (song.videoId.isNotEmpty()) "https://i.ytimg.com/vi/${song.videoId}/hqdefault.jpg" else null
     val progress = if (durationMs > 0) (currentPositionMs.toFloat() / durationMs.toFloat()).coerceIn(0f, 1f) else 0f
 
     Column(
@@ -372,7 +426,7 @@ private fun LcdNowPlayingView(
                     )
                 } else {
                     Icon(
-                        imageVector = Icons.Rounded.MusicNote,
+                        imageVector = SimpIcons.LibraryMusic,
                         contentDescription = null,
                         tint = lcdTheme.secondaryTextColor,
                         modifier = Modifier.size(36.dp)
@@ -417,18 +471,26 @@ private fun LcdNowPlayingView(
         }
 
         // Synced Lyrics snippet if available
-        if (!lyricsText.isNull_orEmpty()) {
-            Text(
-                text = lyricsText,
-                color = lcdTheme.textColor,
-                fontSize = 10.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
+        if (!lyricsText.isNullOrEmpty()) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 4.dp)
-            )
+                    .padding(vertical = 6.dp)
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(lcdTheme.dividerColor.copy(alpha = 0.3f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = lyricsText,
+                    color = lcdTheme.textColor,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    textAlign = TextAlign.Center,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+            }
         }
 
         // Timeline Progress Section
@@ -483,7 +545,7 @@ private fun LcdSearchView(
                 onValueChange = onSearchQueryChange,
                 placeholder = { Text("Search songs, artists...", fontSize = 11.sp, color = lcdTheme.secondaryTextColor) },
                 singleLine = true,
-                leadingIcon = { Icon(Icons.Rounded.Search, contentDescription = null, tint = lcdTheme.secondaryTextColor, modifier = Modifier.size(16.dp)) },
+                leadingIcon = { Icon(SimpIcons.Search, contentDescription = null, tint = lcdTheme.secondaryTextColor, modifier = Modifier.size(16.dp)) },
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = lcdTheme.screenBackground,
                     unfocusedContainerColor = lcdTheme.screenBackground,
@@ -504,6 +566,49 @@ private fun LcdSearchView(
     }
 }
 
+@Composable
+private fun LcdLoginView(
+    onLoginDone: (String) -> Unit
+) {
+    var isHandled by remember { mutableStateOf(false) }
+    val state = rememberWebViewState()
+    val loginUrl = "https://accounts.google.com/ServiceLogin?service=youtube&uilel=3&passive=true&continue=https%3A%2F%2Fmusic.youtube.com%2F"
+
+    fun checkAndSubmitCookies() {
+        if (isHandled) return
+        try {
+            val cookieManager = createWebViewCookieManager()
+            val cookie = cookieManager.getCookie("https://music.youtube.com")
+            if (cookie.isNotEmpty() && (cookie.contains("SAPISID") || cookie.contains("__Secure-3PAPISID") || cookie.contains("SID") || cookie.contains("HSID"))) {
+                isHandled = true
+                onLoginDone(cookie)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        while (!isHandled) {
+            delay(1500)
+            checkAndSubmitCookies()
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        PlatformWebView(
+            state = state,
+            initUrl = loginUrl,
+            aboveContent = {},
+            onPageFinished = { url ->
+                if (url.contains("music.youtube.com")) {
+                    checkAndSubmitCookies()
+                }
+            }
+        )
+    }
+}
+
 private fun formatTime(ms: Long): String {
     val totalSeconds = (ms / 1000).toInt()
     val minutes = totalSeconds / 60
@@ -511,4 +616,4 @@ private fun formatTime(ms: Long): String {
     return "$minutes:${seconds.toString().padStart(2, '0')}"
 }
 
-private fun String?.isNull_orEmpty(): Boolean = this == null || this.trim().isEmpty()
+
