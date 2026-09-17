@@ -8,6 +8,7 @@ import com.maxrave.domain.mediaservice.handler.DownloadHandler
 import com.maxrave.domain.repository.LocalPlaylistRepository
 import com.maxrave.domain.repository.SongRepository
 import com.maxrave.domain.utils.collectResource
+import com.maxrave.domain.utils.isLocal
 import com.maxrave.domain.utils.toTrack
 import com.maxrave.simpmusic.viewModel.base.BaseViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -86,7 +87,7 @@ class SongSelectionViewModel(
         viewModelScope.launch {
             val pending =
                 songsOf(videoIds).filter {
-                    it.downloadState == DownloadState.STATE_NOT_DOWNLOADED
+                    it.downloadState == DownloadState.STATE_NOT_DOWNLOADED && !it.isLocal()
                 }
             if (pending.isEmpty()) return@launch
             pending.forEach { song ->

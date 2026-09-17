@@ -33,6 +33,7 @@ import com.maxrave.domain.repository.SongRepository
 import com.maxrave.domain.utils.FilterState
 import com.maxrave.domain.utils.collectLatestResource
 import com.maxrave.domain.utils.collectResource
+import com.maxrave.domain.utils.isLocal
 import com.maxrave.domain.utils.toArrayListTrack
 import com.maxrave.domain.utils.toSongEntity
 import com.maxrave.domain.utils.toTrack
@@ -158,7 +159,7 @@ class LocalPlaylistViewModel(
                                                 delay(500)
                                                 val fullTracks = localPlaylistRepository.getFullPlaylistTracks(id = uiState.value.id)
                                                 val notDownloadedList =
-                                                    fullTracks.filter { it.downloadState != STATE_DOWNLOADED }.map { it.videoId }
+                                                    fullTracks.filter { it.downloadState != STATE_DOWNLOADED && !it.isLocal() }.map { it.videoId }
                                                 if (fullTracks.isEmpty()) {
                                                     updatePlaylistDownloadState(uiState.value.id, STATE_NOT_DOWNLOADED)
                                                 } else if (fullTracks.all { it.downloadState == STATE_DOWNLOADED } &&
@@ -406,46 +407,6 @@ class LocalPlaylistViewModel(
 
     val listJob: MutableStateFlow<ArrayList<SongEntity>> = MutableStateFlow(arrayListOf())
 
-//        var downloadState: StateFlow<List<Download?>>
-//        viewModelScope.launch {
-//            downloadState = downloadUtils.getAllDownloads().stateIn(viewModelScope)
-//            downloadState.collectLatest { down ->
-//                if (down.isNotEmpty()){
-//                    var count = 0
-//                    down.forEach { downloadItem ->
-//                        if (downloadItem?.state == Download.STATE_COMPLETED) {
-//                            count++
-//                        }
-//                        else if (downloadItem?.state == Download.STATE_FAILED) {
-//                            updatePlaylistDownloadState(id, DownloadState.STATE_DOWNLOADING)
-//                        }
-//                    }
-//                    if (count == down.size) {
-//                        mainRepository.getLocalPlaylist(id).collect{ playlist ->
-//                            mainRepository.getSongsByListVideoId(playlist.tracks!!).collect{ tracks ->
-//                                tracks.forEach { track ->
-//                                    if (track.downloadState != DownloadState.STATE_DOWNLOADED) {
-//                                        mainRepository.updateDownloadState(track.videoId, DownloadState.STATE_NOT_DOWNLOADED)
-//                                        Toast.makeText(getApplication(), "Download Failed", Toast.LENGTH_SHORT).show()
-//                                    }
-//                                }
-//                            }
-//                        }
-//                        Logger.d("Check Downloaded", "Downloaded")
-//                        updatePlaylistDownloadState(id, DownloadState.STATE_DOWNLOADED)
-//                        Toast.makeText(getApplication(), "Download Completed", Toast.LENGTH_SHORT).show()
-//                    }
-//                    else {
-//                        updatePlaylistDownloadState(id, DownloadState.STATE_DOWNLOADING)
-//                    }
-//                }
-//                else {
-//                    updatePlaylistDownloadState(id, DownloadState.STATE_NOT_DOWNLOADED)
-//                }
-//            }
-//        }
-//    }
-
     fun updatePlaylistTitle(
         title: String,
         id: Long,
@@ -611,37 +572,6 @@ class LocalPlaylistViewModel(
                         hideLoadingDialog()
                     },
                 )
-//            mainRepository.createYouTubePlaylist(playlist).collect {
-//                if (it != null) {
-//                    val ytId = "VL$it"
-//                    mainRepository.updateLocalPlaylistYouTubePlaylistId(playlist.id, ytId)
-//                    mainRepository.updateLocalPlaylistYouTubePlaylistSynced(playlist.id, 1)
-//                    mainRepository.getLocalPlaylistByYoutubePlaylistId(ytId).collect { yt ->
-//                        if (yt != null) {
-//                            mainRepository.updateLocalPlaylistYouTubePlaylistSyncState(
-//                                yt.id,
-//                                LocalPlaylistEntity.YouTubeSyncState.Synced,
-//                            )
-//                            mainRepository.getLocalPlaylist(playlist.id).collect { last ->
-//                                _localPlaylist.emit(last)
-//                                Toast
-//                                    .makeText(
-//                                        application,
-//                                        application.getString(Res.string.synced),
-//                                        Toast.LENGTH_SHORT,
-//                                    ).show()
-//                            }
-//                        }
-//                    }
-//                } else {
-//                    Toast
-//                        .makeText(
-//                            application,
-//                            application.getString(Res.string.error),
-//                            Toast.LENGTH_SHORT,
-//                        ).show()
-//                }
-//            }
         }
     }
 
@@ -975,7 +905,7 @@ class LocalPlaylistViewModel(
         viewModelScope.launch {
             listJob.forEach { videoId ->
                 songRepository.getSongById(videoId).singleOrNull()?.let { song ->
-                    if (song.downloadState != STATE_DOWNLOADED) {
+                    if (song.downloadState != STATE_DOWNLOADED && !song.isLocal()) {
                         downloadUtils.downloadTrack(videoId, song.title, song.thumbnails ?: "")
                     }
                 }
@@ -986,11 +916,11 @@ class LocalPlaylistViewModel(
     fun downloadFullPlaylist() {
         viewModelScope.launch {
             val fullTracks = localPlaylistRepository.getFullPlaylistTracks(id = uiState.value.id)
-            val listJob = fullTracks.filter { it.downloadState != STATE_DOWNLOADED }.map { it.videoId }
+            val listJob = fullTracks.filter { it.downloadState != STATE_DOWNLOADED && !it.isLocal() }.map { it.videoId }
             if (listJob.isNotEmpty()) {
                 downloadTracks(listJob)
                 downloadFullPlaylistState(uiState.value.id, listJob)
-            } else if (fullTracks.isNotEmpty() && fullTracks.all { it.downloadState == STATE_DOWNLOADED }) {
+            } else if (fullTracks.isNotEmpty() && fullTracks.all { it.downloadState == STATE_DOWNLOADED || it.isLocal() }) {
                 updatePlaylistDownloadState(uiState.value.id, STATE_DOWNLOADED)
             } else {
                 makeToast(getString(Res.string.playlist_is_empty))

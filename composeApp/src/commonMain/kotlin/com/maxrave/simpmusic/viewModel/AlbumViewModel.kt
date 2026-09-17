@@ -13,6 +13,7 @@ import com.maxrave.domain.mediaservice.handler.PlaylistType
 import com.maxrave.domain.mediaservice.handler.QueueData
 import com.maxrave.domain.repository.AlbumRepository
 import com.maxrave.domain.repository.SongRepository
+import com.maxrave.domain.utils.isLocal
 import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.toAlbumEntity
 import com.maxrave.domain.utils.toArrayListTrack
@@ -260,7 +261,7 @@ class AlbumViewModel(
                 makeToast(getString(Res.string.playlist_is_empty))
                 return@launch
             }
-            val listJob = fullListSong.filter { it.downloadState != DownloadState.STATE_DOWNLOADED }
+            val listJob = fullListSong.filter { it.downloadState != DownloadState.STATE_DOWNLOADED && !it.isLocal() }
             log("List job: $listJob")
             if (listJob.isEmpty()) {
                 makeToast(getString(Res.string.downloaded))

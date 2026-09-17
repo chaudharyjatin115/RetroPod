@@ -264,6 +264,9 @@ class NowPlayingBottomSheetViewModel(
                 }
 
                 is NowPlayingBottomSheetUIEvent.Download -> {
+                    if (songUIState.videoId.startsWith("local_") || songUIState.videoId.startsWith("content:") || songUIState.videoId.startsWith("file:") || songUIState.videoId.startsWith("/")) {
+                        return@launch
+                    }
                     when (songUIState.downloadState) {
                         DownloadState.STATE_NOT_DOWNLOADED -> {
                             songRepository.updateDownloadState(

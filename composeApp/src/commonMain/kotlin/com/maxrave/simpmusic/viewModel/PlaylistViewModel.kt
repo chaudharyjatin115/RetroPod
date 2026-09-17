@@ -21,6 +21,7 @@ import com.maxrave.domain.repository.PlaylistRepository
 import com.maxrave.domain.repository.SongRepository
 import com.maxrave.domain.utils.Resource
 import com.maxrave.domain.utils.collectLatestResource
+import com.maxrave.domain.utils.isLocal
 import com.maxrave.domain.utils.isRadioPlaylistId
 import com.maxrave.domain.utils.toListVideoId
 import com.maxrave.domain.utils.toPlaylistEntity
@@ -108,7 +109,7 @@ class PlaylistViewModel(
                                         launch {
                                             val listSongs = songRepository.getSongsByListVideoId(tracks.toListVideoId()).firstOrNull() ?: emptyList()
                                             if (state == STATE_DOWNLOADED && listSongs.isNotEmpty()) {
-                                                listSongs.filter { it.downloadState != STATE_DOWNLOADED }.let { notDownloaded ->
+                                                listSongs.filter { it.downloadState != STATE_DOWNLOADED && !it.isLocal() }.let { notDownloaded ->
                                                     if (notDownloaded.isNotEmpty()) {
                                                         downloadTracks(notDownloaded.map { it.videoId })
                                                         updatePlaylistDownloadState(id, STATE_DOWNLOADING)
@@ -644,7 +645,7 @@ class PlaylistViewModel(
             makeToast(getString(Res.string.downloading))
             updatePlaylistDownloadState(id, STATE_DOWNLOADING)
             getFullTracks { tracks ->
-                tracks.forEach {
+                tracks.filter { !it.isLocal() }.forEach {
                     viewModelScope.launch {
                         downloadUtils.downloadTrack(it.videoId, it.title, it.thumbnails?.lastOrNull()?.url ?: "")
                     }
