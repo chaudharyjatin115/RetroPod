@@ -55,6 +55,8 @@ Whether streaming from YouTube Music or listening to your local audio library, R
    ```
 
 ---
+Credits to 
+Simp music 
 
 ## 📄 License
 
