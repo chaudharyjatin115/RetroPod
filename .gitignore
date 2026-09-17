@@ -19,6 +19,7 @@ crowdin.yml
 .kotlin/
 .idea
 /simpmusic.jks
+/retropod.jks
 /ffmpeg-kit/build/
 
 #dev files
