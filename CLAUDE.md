@@ -15,7 +15,7 @@
 
 ### Basic Information
 - **App Name**: RetroPod
-- **Application ID**: `com.maxrave.retropod`
+- **Application ID**: `chaudharyjatin115.retropod`
 - **Primary language**: Kotlin
 - **UI Framework**: Jetpack Compose / Compose Multiplatform
 - **Architecture**: Clean Architecture + MVVM

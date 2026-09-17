@@ -10,7 +10,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.maxrave.retropod"
+        applicationId = "chaudharyjatin115.retropod"
         minSdk = 26
         targetSdk = 36
         versionCode =
