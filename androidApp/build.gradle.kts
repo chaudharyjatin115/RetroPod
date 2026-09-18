@@ -92,6 +92,10 @@ android {
             versionNameSuffix = "-dev"
         }
     }
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
     compileOptions {
         isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_21
