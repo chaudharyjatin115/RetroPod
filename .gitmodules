@@ -1,4 +1,3 @@
 [submodule "core"]
     path = core
     url = https://github.com/chaudharyjatin115/RetroPod-core.git
-    url = https://github.com/maxrave-dev/core
