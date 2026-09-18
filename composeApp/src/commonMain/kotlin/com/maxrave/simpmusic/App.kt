@@ -407,7 +407,7 @@ private fun buildIpodMenuItems(
             IpodMenuItem("Account Settings", subtitle = if (isYoutubeLoggedIn) "Logged In" else "Not Logged In", hasSubmenu = true) {
                 navEngine.pushScreen(IpodScreen.SettingsLogin)
             },
-            IpodMenuItem("Whimsical Stickers", subtitle = if (stickersEnabled) "Enabled 🎀" else "Disabled", hasSubmenu = false) {
+            IpodMenuItem("Laser Engraved Decals", subtitle = if (stickersEnabled) "Enabled" else "Disabled", hasSubmenu = false) {
                 setStickersEnabled(!stickersEnabled)
             },
             IpodMenuItem("Shell Theme", subtitle = hardwareTheme.name, hasSubmenu = true) {

@@ -1,6 +1,8 @@
 package com.maxrave.simpmusic.ui.ipod
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,7 +31,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxrave.domain.data.model.browse.album.Track
@@ -72,12 +76,12 @@ fun IpodHardwareShell(
         Brush.verticalGradient(
             colors = listOf(
                 hardwareTheme.bodyColor,
-                hardwareTheme.bodyColor
+                hardwareTheme.bodyColor.copy(alpha = 0.92f)
             )
         )
     }
 
-    // Physical iPod Shell spans the entire application screen
+    // Main App Hardware Container
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -88,32 +92,75 @@ fun IpodHardwareShell(
             modifier = Modifier
                 .widthIn(max = 440.dp)
                 .fillMaxSize()
-                .padding(horizontal = 20.dp, vertical = 20.dp),
+                .padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // 1. TOP SECTION: Hold Switch Pill (Upper Right)
-            Box(
+            // 1. TOP SECTION: Physical Hold Switch + Chassis Accent Header
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp, bottom = 8.dp, end = 4.dp),
-                contentAlignment = Alignment.TopEnd
+                    .padding(start = 4.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                if (stickersEnabled) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .background(Color.White.copy(alpha = 0.12f))
+                            .border(0.5.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(4.dp))
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    ) {
+                        Text(
+                            text = "RETROPOD CLASSIC • 128GB",
+                            color = hardwareTheme.wheelTextColor.copy(alpha = 0.75f),
+                            fontSize = 8.5.sp,
+                            fontWeight = FontWeight.Bold,
+                            fontFamily = FontFamily.Monospace,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+                } else {
+                    Spacer(modifier = Modifier.width(1.dp))
+                }
+
                 HoldSwitch(
                     isHoldEnabled = isHoldEnabled,
                     onHoldToggle = onHoldToggle
                 )
             }
 
-            // 2. MIDDLE SECTION: Embedded Rectangular Display Window with Black Bezel
+            // 2. MIDDLE SECTION: Embedded Screen Window with Premium Bezel
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .shadow(elevation = 6.dp, shape = RoundedCornerShape(12.dp))
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(hardwareTheme.bezelColor)
-                    .border(width = 2.5.dp, color = Color(0xFF0D0D0E), shape = RoundedCornerShape(12.dp))
-                    .padding(6.dp)
+                    .shadow(
+                        elevation = 12.dp,
+                        shape = RoundedCornerShape(14.dp),
+                        ambientColor = Color.Black.copy(alpha = 0.5f),
+                        spotColor = Color.Black.copy(alpha = 0.7f)
+                    )
+                    .clip(RoundedCornerShape(14.dp))
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                hardwareTheme.bezelColor,
+                                hardwareTheme.bezelColor.copy(alpha = 0.95f)
+                            )
+                        )
+                    )
+                    .border(
+                        width = 2.dp,
+                        brush = Brush.verticalGradient(
+                            colors = listOf(
+                                Color.White.copy(alpha = 0.2f),
+                                Color.Black.copy(alpha = 0.6f)
+                            )
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                    .padding(8.dp)
             ) {
                 IpodLcdDisplay(
                     lcdTheme = lcdTheme,
@@ -133,14 +180,14 @@ fun IpodHardwareShell(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-            // 3. LOWER SECTION: Large Perfect Circle Click Wheel
+            // 3. LOWER SECTION: Click Wheel
             Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.82f)
+                    .fillMaxWidth(0.83f)
                     .aspectRatio(1f)
-                    .padding(bottom = 24.dp),
+                    .padding(bottom = 16.dp),
                 contentAlignment = Alignment.Center
             ) {
                 ClickWheel(
@@ -157,19 +204,6 @@ fun IpodHardwareShell(
                 )
             }
         }
-
-        // Whimsical & Modern Aesthetic Overlay Stickers
-        if (stickersEnabled) {
-            Text("🎧", fontSize = 28.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 20.dp, y = 38.dp))
-            Text("🎀", fontSize = 28.sp, modifier = Modifier.align(Alignment.TopStart).offset(x = 60.dp, y = 38.dp))
-            Text("🩰", fontSize = 26.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = (-100).dp, y = 38.dp))
-            Text("⚡", fontSize = 24.sp, modifier = Modifier.align(Alignment.TopEnd).offset(x = (-60).dp, y = 38.dp))
-            Text("💖", fontSize = 24.sp, modifier = Modifier.align(Alignment.CenterStart).offset(x = 12.dp, y = (-120).dp))
-            Text("💿", fontSize = 26.sp, modifier = Modifier.align(Alignment.CenterEnd).offset(x = (-12).dp, y = (-120).dp))
-            Text("🪐", fontSize = 26.sp, modifier = Modifier.align(Alignment.BottomStart).offset(x = 24.dp, y = (-32).dp))
-            Text("🦋", fontSize = 26.sp, modifier = Modifier.align(Alignment.BottomEnd).offset(x = (-24).dp, y = (-32).dp))
-            Text("✨", fontSize = 22.sp, modifier = Modifier.align(Alignment.BottomCenter).offset(y = (-12).dp))
-        }
     }
 }
 
@@ -178,35 +212,76 @@ fun HoldSwitch(
     isHoldEnabled: Boolean,
     onHoldToggle: () -> Unit
 ) {
-    val bgColor by animateColorAsState(
-        if (isHoldEnabled) Color(0xFFDC2626) else Color(0x66FFFFFF)
+    val sliderOffset by animateDpAsState(
+        targetValue = if (isHoldEnabled) 18.dp else 2.dp,
+        animationSpec = tween(durationMillis = 180)
+    )
+
+    val trackColor by animateColorAsState(
+        targetValue = if (isHoldEnabled) Color(0xFFDC2626) else Color(0x40FFFFFF),
+        animationSpec = tween(durationMillis = 180)
     )
 
     Box(
         modifier = Modifier
-            .shadow(elevation = 2.dp, shape = CircleShape)
-            .clip(CircleShape)
-            .background(bgColor)
-            .border(width = 0.5.dp, color = Color.White.copy(alpha = 0.4f), shape = CircleShape)
             .clickable { onHoldToggle() }
-            .padding(horizontal = 12.dp, vertical = 5.dp)
+            .padding(2.dp)
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             Text(
-                text = if (isHoldEnabled) "HOLD ON" else "HOLD OFF",
-                color = Color.White,
-                fontSize = 11.sp,
-                fontWeight = FontWeight.Bold
+                text = "HOLD",
+                color = if (isHoldEnabled) Color(0xFFEF4444) else Color.White.copy(alpha = 0.7f),
+                fontSize = 10.sp,
+                fontWeight = FontWeight.Bold,
+                fontFamily = FontFamily.SansSerif,
+                letterSpacing = 0.5.sp
             )
-            Spacer(modifier = Modifier.width(6.dp))
+
+            // Switch Track Container
             Box(
                 modifier = Modifier
-                    .size(9.dp)
+                    .width(36.dp)
+                    .height(18.dp)
+                    .shadow(elevation = 2.dp, shape = CircleShape)
                     .clip(CircleShape)
-                    .background(if (isHoldEnabled) Color(0xFFFEF08A) else Color.White)
-            )
+                    .background(trackColor)
+                    .border(
+                        width = 1.dp,
+                        color = Color.White.copy(alpha = 0.3f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.CenterStart
+            ) {
+                // Sliding Metallic Knob
+                Box(
+                    modifier = Modifier
+                        .offset { IntOffset(sliderOffset.roundToPx(), 0) }
+                        .size(14.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.White,
+                                    Color(0xFFE2E8F0)
+                                )
+                            )
+                        )
+                        .border(0.5.dp, Color.Gray.copy(alpha = 0.4f), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    if (isHoldEnabled) {
+                        Box(
+                            modifier = Modifier
+                                .size(5.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFFDC2626))
+                        )
+                    }
+                }
+            }
         }
     }
 }

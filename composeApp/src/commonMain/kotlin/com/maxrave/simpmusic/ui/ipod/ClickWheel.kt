@@ -1,11 +1,14 @@
 package com.maxrave.simpmusic.ui.ipod
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,11 +20,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
@@ -57,22 +62,40 @@ fun ClickWheel(
 ) {
     val haptic = LocalHapticFeedback.current
     var accumulatedAngle by remember { mutableFloatStateOf(0f) }
+    var pressedSector by remember { mutableStateOf<WheelSector?>(null) }
 
-    val angleStepThreshold = 14f // 14 degrees per step (~25 steps per 360 deg circle)
+    val angleStepThreshold = 14f // 14 degrees per scroll step (~25 steps per full rotation)
+
+    val centerInteractionSource = remember { MutableInteractionSource() }
+    val isCenterPressed by centerInteractionSource.collectIsPressedAsState()
+
+    val centerScale by animateFloatAsState(
+        targetValue = if (isCenterPressed) 0.94f else 1f,
+        animationSpec = tween(durationMillis = 100)
+    )
 
     val wheelBrush = when (theme.finishStyle) {
         HardwareFinish.TRANSPARENT -> Brush.radialGradient(
             colors = listOf(
-                theme.wheelColor.copy(alpha = 0.85f),
-                theme.wheelColor.copy(alpha = 0.70f)
+                theme.wheelColor.copy(alpha = 0.88f),
+                theme.wheelColor.copy(alpha = 0.72f),
+                theme.wheelColor.copy(alpha = 0.95f)
             )
         )
         HardwareFinish.GLOSSY_PLASTIC -> Brush.radialGradient(
             colors = listOf(
                 theme.wheelColor,
                 theme.wheelColor,
-                Color.White.copy(alpha = 0.25f),
-                theme.wheelColor
+                Color.White.copy(alpha = 0.22f),
+                theme.wheelColor.copy(alpha = 0.95f)
+            )
+        )
+        HardwareFinish.BRUSHED_ALUMINUM, HardwareFinish.POLISHED_METAL -> Brush.radialGradient(
+            colors = listOf(
+                theme.wheelColor,
+                theme.wheelColor.copy(alpha = 0.96f),
+                Color.White.copy(alpha = 0.15f),
+                theme.wheelColor.copy(alpha = 0.88f)
             )
         )
         else -> Brush.radialGradient(
@@ -87,12 +110,17 @@ fun ClickWheel(
     Box(
         modifier = modifier
             .aspectRatio(1f)
-            .shadow(elevation = if (theme.finishStyle == HardwareFinish.TRANSPARENT) 2.dp else 10.dp, shape = CircleShape)
+            .shadow(
+                elevation = if (theme.finishStyle == HardwareFinish.TRANSPARENT) 3.dp else 12.dp,
+                shape = CircleShape,
+                ambientColor = Color.Black.copy(alpha = 0.4f),
+                spotColor = Color.Black.copy(alpha = 0.6f)
+            )
             .clip(CircleShape)
             .background(wheelBrush)
             .border(
                 width = 1.dp,
-                color = theme.wheelTextColor.copy(alpha = 0.2f),
+                color = theme.wheelTextColor.copy(alpha = 0.18f),
                 shape = CircleShape
             )
             .pointerInput(isHoldEnabled) {
@@ -101,7 +129,10 @@ fun ClickWheel(
                 detectDragGestures(
                     onDragStart = {
                         accumulatedAngle = 0f
+                        pressedSector = null
                     },
+                    onDragEnd = { pressedSector = null },
+                    onDragCancel = { pressedSector = null },
                     onDrag = { change, dragAmount ->
                         val center = Offset(size.width / 2f, size.height / 2f)
                         val pos = change.position
@@ -141,21 +172,43 @@ fun ClickWheel(
                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
 
                     when {
-                        angle >= 225f && angle < 315f -> onMenuClick()          // TOP = MENU
-                        angle >= 45f && angle < 135f -> onPlayPauseClick()       // BOTTOM = PLAY/PAUSE
-                        angle >= 135f && angle < 225f -> onPrevClick()          // LEFT = PREV/REW
-                        else -> onNextClick()                                    // RIGHT = NEXT/FF
+                        angle >= 225f && angle < 315f -> {
+                            pressedSector = WheelSector.MENU
+                            onMenuClick()
+                        }
+                        angle >= 45f && angle < 135f -> {
+                            pressedSector = WheelSector.PLAY_PAUSE
+                            onPlayPauseClick()
+                        }
+                        angle >= 135f && angle < 225f -> {
+                            pressedSector = WheelSector.PREV
+                            onPrevClick()
+                        }
+                        else -> {
+                            pressedSector = WheelSector.NEXT
+                            onNextClick()
+                        }
                     }
                 }
             }
     ) {
+        // Subtle sector press overlay highlight
+        if (pressedSector != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.White.copy(alpha = 0.08f))
+            )
+        }
+
         // TOP LABEL: MENU
         Text(
             text = "MENU",
-            color = theme.wheelTextColor,
+            color = theme.wheelTextColor.copy(alpha = if (pressedSector == WheelSector.MENU) 1f else 0.9f),
             fontWeight = FontWeight.Bold,
-            fontSize = 14.sp,
+            fontSize = 13.5.sp,
             fontFamily = FontFamily.SansSerif,
+            letterSpacing = 0.5.sp,
             modifier = Modifier
                 .align(Alignment.TopCenter)
                 .padding(top = 22.dp)
@@ -165,7 +218,7 @@ fun ClickWheel(
         Icon(
             imageVector = if (isPlaying) SimpIcons.Pause else SimpIcons.PlayArrow,
             contentDescription = "Play Pause",
-            tint = theme.wheelTextColor,
+            tint = theme.wheelTextColor.copy(alpha = if (pressedSector == WheelSector.PLAY_PAUSE) 1f else 0.9f),
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(bottom = 22.dp)
@@ -176,7 +229,7 @@ fun ClickWheel(
         Icon(
             imageVector = SimpIcons.SkipNext,
             contentDescription = "Next",
-            tint = theme.wheelTextColor,
+            tint = theme.wheelTextColor.copy(alpha = if (pressedSector == WheelSector.NEXT) 1f else 0.9f),
             modifier = Modifier
                 .align(Alignment.CenterEnd)
                 .padding(end = 22.dp)
@@ -187,7 +240,7 @@ fun ClickWheel(
         Icon(
             imageVector = SimpIcons.SkipPrevious,
             contentDescription = "Previous",
-            tint = theme.wheelTextColor,
+            tint = theme.wheelTextColor.copy(alpha = if (pressedSector == WheelSector.PREV) 1f else 0.9f),
             modifier = Modifier
                 .align(Alignment.CenterStart)
                 .padding(start = 22.dp)
@@ -199,7 +252,7 @@ fun ClickWheel(
             colors = listOf(
                 theme.centerButtonColor,
                 theme.centerButtonColor,
-                theme.centerButtonColor.copy(alpha = 0.90f)
+                theme.centerButtonColor.copy(alpha = 0.88f)
             )
         )
 
@@ -207,16 +260,20 @@ fun ClickWheel(
             modifier = Modifier
                 .fillMaxSize(0.38f)
                 .align(Alignment.Center)
-                .shadow(elevation = 6.dp, shape = CircleShape)
+                .scale(centerScale)
+                .shadow(
+                    elevation = if (isCenterPressed) 2.dp else 6.dp,
+                    shape = CircleShape
+                )
                 .clip(CircleShape)
                 .background(centerButtonBrush)
                 .border(
                     width = 1.dp,
-                    color = theme.wheelTextColor.copy(alpha = 0.20f),
+                    color = theme.wheelTextColor.copy(alpha = 0.18f),
                     shape = CircleShape
                 )
                 .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
+                    interactionSource = centerInteractionSource,
                     indication = null
                 ) {
                     if (!isHoldEnabled) {
@@ -226,4 +283,8 @@ fun ClickWheel(
                 }
         )
     }
+}
+
+private enum class WheelSector {
+    MENU, PLAY_PAUSE, PREV, NEXT
 }
