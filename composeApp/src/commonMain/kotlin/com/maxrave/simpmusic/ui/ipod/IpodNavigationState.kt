@@ -5,7 +5,11 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.maxrave.domain.data.model.browse.album.Track
 
+/**
+ * Screen destinations supported in the iPod interface navigation engine.
+ */
 sealed class IpodScreen(val title: String) {
     data object Main : IpodScreen("RetroPod")
     data object Music : IpodScreen("Music")
@@ -28,9 +32,12 @@ sealed class IpodScreen(val title: String) {
     data object SettingsLcdTheme : IpodScreen("LCD Display Theme")
     data object SettingsLogin : IpodScreen("YouTube Account")
     data object YouTubeLogin : IpodScreen("Sign In")
-    data class TrackOptions(val track: com.maxrave.domain.data.model.browse.album.Track, val queue: List<com.maxrave.domain.data.model.browse.album.Track>) : IpodScreen(track.title)
+    data class TrackOptions(val track: Track, val queue: List<Track>) : IpodScreen(track.title)
 }
 
+/**
+ * Representation of a selectable item within the iPod LCD menu list.
+ */
 data class IpodMenuItem(
     val title: String,
     val subtitle: String? = null,
@@ -38,6 +45,9 @@ data class IpodMenuItem(
     val action: () -> Unit
 )
 
+/**
+ * Navigation state engine managing backstack, selection index, and search state.
+ */
 class IpodNavigationEngine {
     val navStack = mutableStateListOf<IpodScreen>(IpodScreen.Main)
     var selectedIndex by mutableIntStateOf(0)
@@ -46,13 +56,16 @@ class IpodNavigationEngine {
     val currentScreen: IpodScreen
         get() = navStack.lastOrNull() ?: IpodScreen.Main
 
+    val canGoBack: Boolean
+        get() = navStack.size > 1
+
     fun pushScreen(screen: IpodScreen) {
         navStack.add(screen)
         selectedIndex = 0
     }
 
     fun popScreen(): Boolean {
-        if (navStack.size > 1) {
+        if (canGoBack) {
             navStack.removeAt(navStack.lastIndex)
             selectedIndex = 0
             return true

@@ -38,6 +38,58 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.maxrave.domain.data.model.browse.album.Track
 
+/**
+ * Root container rendering the physical iPod hardware chassis, Hold switch, LCD screen bezel, and Click Wheel.
+ */
+@Composable
+fun IpodHardwareShell(
+    hardwareTheme: IpodHardwareTheme,
+    lcdTheme: LcdTheme,
+    screen: IpodScreen,
+    canGoBack: Boolean,
+    items: List<IpodMenuItem>,
+    selectedIndex: Int,
+    playbackState: IpodPlaybackState,
+    wheelActions: IpodWheelActions,
+    searchQuery: String,
+    isHoldEnabled: Boolean,
+    stickersEnabled: Boolean = true,
+    onHoldToggle: () -> Unit,
+    onSearchQueryChange: (String) -> Unit,
+    onYoutubeLoginDone: (String) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    IpodHardwareShell(
+        hardwareTheme = hardwareTheme,
+        lcdTheme = lcdTheme,
+        screen = screen,
+        canGoBack = canGoBack,
+        items = items,
+        selectedIndex = selectedIndex,
+        currentSong = playbackState.currentSong,
+        isPlaying = playbackState.isPlaying,
+        currentPositionMs = playbackState.currentPositionMs,
+        durationMs = playbackState.durationMs,
+        lyricsText = playbackState.lyricsText,
+        searchQuery = searchQuery,
+        isHoldEnabled = isHoldEnabled,
+        stickersEnabled = stickersEnabled,
+        onHoldToggle = onHoldToggle,
+        onSearchQueryChange = onSearchQueryChange,
+        onYoutubeLoginDone = onYoutubeLoginDone,
+        onWheelScroll = wheelActions.onScroll,
+        onMenuClick = wheelActions.onMenuClick,
+        onSelectClick = wheelActions.onSelectClick,
+        onPlayPauseClick = wheelActions.onPlayPauseClick,
+        onNextClick = wheelActions.onNextClick,
+        onPrevClick = wheelActions.onPrevClick,
+        modifier = modifier
+    )
+}
+
+/**
+ * Overload accepting direct primitive parameters for backwards compatibility.
+ */
 @Composable
 fun IpodHardwareShell(
     hardwareTheme: IpodHardwareTheme,
@@ -81,7 +133,6 @@ fun IpodHardwareShell(
         )
     }
 
-    // Main App Hardware Container
     Box(
         modifier = modifier
             .fillMaxSize()
@@ -96,71 +147,18 @@ fun IpodHardwareShell(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            // 1. TOP SECTION: Physical Hold Switch + Chassis Accent Header
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 4.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (stickersEnabled) {
-                    Box(
-                        modifier = Modifier
-                            .clip(RoundedCornerShape(4.dp))
-                            .background(Color.White.copy(alpha = 0.12f))
-                            .border(0.5.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(4.dp))
-                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                    ) {
-                        Text(
-                            text = "RETROPOD CLASSIC • 128GB",
-                            color = hardwareTheme.wheelTextColor.copy(alpha = 0.75f),
-                            fontSize = 8.5.sp,
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = FontFamily.Monospace,
-                            letterSpacing = 0.5.sp
-                        )
-                    }
-                } else {
-                    Spacer(modifier = Modifier.width(1.dp))
-                }
-
-                HoldSwitch(
-                    isHoldEnabled = isHoldEnabled,
-                    onHoldToggle = onHoldToggle
-                )
-            }
+            // 1. TOP SECTION: Physical Hold Switch + Laser Engraved Chassis Badge
+            ChassisHeader(
+                stickersEnabled = stickersEnabled,
+                badgeColor = hardwareTheme.wheelTextColor,
+                isHoldEnabled = isHoldEnabled,
+                onHoldToggle = onHoldToggle
+            )
 
             // 2. MIDDLE SECTION: Embedded Screen Window with Premium Bezel
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .shadow(
-                        elevation = 12.dp,
-                        shape = RoundedCornerShape(14.dp),
-                        ambientColor = Color.Black.copy(alpha = 0.5f),
-                        spotColor = Color.Black.copy(alpha = 0.7f)
-                    )
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                hardwareTheme.bezelColor,
-                                hardwareTheme.bezelColor.copy(alpha = 0.95f)
-                            )
-                        )
-                    )
-                    .border(
-                        width = 2.dp,
-                        brush = Brush.verticalGradient(
-                            colors = listOf(
-                                Color.White.copy(alpha = 0.2f),
-                                Color.Black.copy(alpha = 0.6f)
-                            )
-                        ),
-                        shape = RoundedCornerShape(14.dp)
-                    )
-                    .padding(8.dp)
+            BezelScreenWindow(
+                bezelColor = hardwareTheme.bezelColor,
+                modifier = Modifier.fillMaxWidth()
             ) {
                 IpodLcdDisplay(
                     lcdTheme = lcdTheme,
@@ -204,6 +202,87 @@ fun IpodHardwareShell(
                 )
             }
         }
+    }
+}
+
+@Composable
+private fun ChassisHeader(
+    stickersEnabled: Boolean,
+    badgeColor: Color,
+    isHoldEnabled: Boolean,
+    onHoldToggle: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, top = 8.dp, end = 4.dp, bottom = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (stickersEnabled) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(Color.White.copy(alpha = 0.12f))
+                    .border(0.5.dp, Color.White.copy(alpha = 0.25f), RoundedCornerShape(4.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp)
+            ) {
+                Text(
+                    text = "RETROPOD CLASSIC • 128GB",
+                    color = badgeColor.copy(alpha = 0.75f),
+                    fontSize = 8.5.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace,
+                    letterSpacing = 0.5.sp
+                )
+            }
+        } else {
+            Spacer(modifier = Modifier.width(1.dp))
+        }
+
+        HoldSwitch(
+            isHoldEnabled = isHoldEnabled,
+            onHoldToggle = onHoldToggle
+        )
+    }
+}
+
+@Composable
+private fun BezelScreenWindow(
+    bezelColor: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .shadow(
+                elevation = 12.dp,
+                shape = RoundedCornerShape(14.dp),
+                ambientColor = Color.Black.copy(alpha = 0.5f),
+                spotColor = Color.Black.copy(alpha = 0.7f)
+            )
+            .clip(RoundedCornerShape(14.dp))
+            .background(
+                Brush.verticalGradient(
+                    colors = listOf(
+                        bezelColor,
+                        bezelColor.copy(alpha = 0.95f)
+                    )
+                )
+            )
+            .border(
+                width = 2.dp,
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        Color.White.copy(alpha = 0.2f),
+                        Color.Black.copy(alpha = 0.6f)
+                    )
+                ),
+                shape = RoundedCornerShape(14.dp)
+            )
+            .padding(8.dp)
+    ) {
+        content()
     }
 }
 

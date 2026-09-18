@@ -65,6 +65,43 @@ import com.maxrave.simpmusic.ui.icon.Search
 import com.maxrave.simpmusic.ui.icon.SimpIcons
 import kotlinx.coroutines.delay
 
+/**
+ * Root Composable for the iPod LCD screen rendering status bar, menu views, now playing, and search.
+ */
+@Composable
+fun IpodLcdDisplay(
+    lcdTheme: LcdTheme,
+    screen: IpodScreen,
+    canGoBack: Boolean,
+    items: List<IpodMenuItem>,
+    selectedIndex: Int,
+    playbackState: IpodPlaybackState,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onYoutubeLoginDone: (cookie: String) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    IpodLcdDisplay(
+        lcdTheme = lcdTheme,
+        screen = screen,
+        canGoBack = canGoBack,
+        items = items,
+        selectedIndex = selectedIndex,
+        currentSong = playbackState.currentSong,
+        isPlaying = playbackState.isPlaying,
+        currentPositionMs = playbackState.currentPositionMs,
+        durationMs = playbackState.durationMs,
+        lyricsText = playbackState.lyricsText,
+        searchQuery = searchQuery,
+        onSearchQueryChange = onSearchQueryChange,
+        onYoutubeLoginDone = onYoutubeLoginDone,
+        modifier = modifier
+    )
+}
+
+/**
+ * Direct primitive parameter overload for backwards compatibility.
+ */
 @Composable
 fun IpodLcdDisplay(
     lcdTheme: LcdTheme,
